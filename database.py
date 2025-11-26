@@ -1,142 +1,204 @@
 """
-Database Operations
+Modul Database Operations
 Semua operasi CRUD database JSON
 """
 
 import json
 import os
-from config import DB_FILE, DEFAULT_DB
+from config import file_database, database_default
 
 # Global database
 db = {}
 
 
-def load_database():
+def muat_database():
     """Load database dari file JSON"""
-    global db
-    if os.path.exists(DB_FILE):
-        with open(DB_FILE, 'r') as f:
-            db = json.load(f)
-    else:
-        db = DEFAULT_DB.copy()
-        save_database()
-    return db
+    try:
+        global db
+        if os.path.exists(file_database):
+            with open(file_database, 'r') as f:
+                db = json.load(f)
+        else:
+            db = database_default.copy()
+            simpan_database()
+        return db
+    except Exception as e:
+        print(f"Error saat memuat database: {e}")
+        db = database_default.copy()
+        return db
 
 
-def save_database():
+def simpan_database():
     """Simpan database ke file JSON"""
-    with open(DB_FILE, 'w') as f:
-        json.dump(db, f, indent=4)
+    try:
+        with open(file_database, 'w') as f:
+            json.dump(db, f, indent=4)
+    except Exception as e:
+        print(f"Error saat menyimpan database: {e}")
 
 
-def get_user(username):
+def ambil_pengguna(username):
     """Get user tertentu"""
-    return db.get("users", {}).get(username)
+    try:
+        return db.get("users", {}).get(username)
+    except Exception as e:
+        print(f"Error saat mengambil pengguna: {e}")
+        return None
 
 
-def add_user(username, user_data):
+def tambah_pengguna(username, data_pengguna):
     """Tambah user baru"""
-    if "users" not in db:
-        db["users"] = {}
-    db["users"][username] = user_data
-    save_database()
+    try:
+        if "users" not in db:
+            db["users"] = {}
+        db["users"][username] = data_pengguna
+        simpan_database()
+    except Exception as e:
+        print(f"Error saat menambah pengguna: {e}")
 
 
-def user_exists(username):
+def pengguna_ada(username):
     """Cek apakah username sudah ada"""
-    return username in db.get("users", {})
+    try:
+        return username in db.get("users", {})
+    except Exception:
+        return False
 
 
-def get_user_wallet(username):
+def ambil_dompet_pengguna(username):
     """Get wallet user"""
-    user = get_user(username)
-    if user:
-        return user.get("wallets", {})
-    return {}
+    try:
+        pengguna = ambil_pengguna(username)
+        if pengguna:
+            return pengguna.get("wallets", {})
+        return {}
+    except Exception as e:
+        print(f"Error saat mengambil dompet pengguna: {e}")
+        return {}
 
 
-def update_user_wallet(username, wallet_data):
+def perbarui_dompet_pengguna(username, data_dompet):
     """Update wallet user"""
-    if username in db.get("users", {}):
-        db["users"][username]["wallets"] = wallet_data
-        save_database()
-        return True
-    return False
+    try:
+        if username in db.get("users", {}):
+            db["users"][username]["wallets"] = data_dompet
+            simpan_database()
+            return True
+        return False
+    except Exception as e:
+        print(f"Error saat memperbarui dompet pengguna: {e}")
+        return False
 
 
-def get_market_prices():
+def ambil_harga_pasar():
     """Get harga pasar"""
-    return db.get("market_prices", {})
+    try:
+        return db.get("harga_pasar", {})
+    except Exception as e:
+        print(f"Error saat mengambil harga pasar: {e}")
+        return {}
 
 
-def update_market_price(symbol, price):
+def perbarui_harga_pasar(symbol, harga):
     """Update harga pasar"""
-    if "market_prices" not in db:
-        db["market_prices"] = {}
-    db["market_prices"][symbol] = price
-    save_database()
+    try:
+        if "harga_pasar" not in db:
+            db["harga_pasar"] = {}
+        db["harga_pasar"][symbol] = harga
+        simpan_database()
+    except Exception as e:
+        print(f"Error saat memperbarui harga pasar: {e}")
 
 
-def get_local_coins():
+def ambil_koin_lokal():
     """Get koin lokal"""
-    return db.get("local_coins", [])
+    try:
+        return db.get("koin_lokal", [])
+    except Exception as e:
+        print(f"Error saat mengambil koin lokal: {e}")
+        return []
 
 
-def add_local_coin(coin_data):
+def tambah_koin_lokal(data_koin):
     """Tambah koin lokal"""
-    if "local_coins" not in db:
-        db["local_coins"] = []
-    db["local_coins"].append(coin_data)
-    save_database()
+    try:
+        if "koin_lokal" not in db:
+            db["koin_lokal"] = []
+        db["koin_lokal"].append(data_koin)
+        simpan_database()
+    except Exception as e:
+        print(f"Error saat menambah koin lokal: {e}")
 
 
-def update_local_coin(symbol, updates):
+def perbarui_koin_lokal(symbol, pembaruan):
     """Update koin lokal"""
-    for coin in db.get("local_coins", []):
-        if coin["symbol"] == symbol:
-            coin.update(updates)
-            save_database()
-            return True
-    return False
+    try:
+        for koin in db.get("koin_lokal", []):
+            if koin["symbol"] == symbol:
+                koin.update(pembaruan)
+                simpan_database()
+                return True
+        return False
+    except Exception as e:
+        print(f"Error saat memperbarui koin lokal: {e}")
+        return False
 
 
-def delete_local_coin(symbol):
+def hapus_koin_lokal(symbol):
     """Hapus koin lokal"""
-    local_coins = db.get("local_coins", [])
-    db["local_coins"] = [c for c in local_coins if c["symbol"] != symbol]
-    
-    # Hapus dari market_prices juga
-    if symbol in db.get("market_prices", {}):
-        del db["market_prices"][symbol]
-    
-    save_database()
-    return True
+    try:
+        koin_lokal = db.get("koin_lokal", [])
+        db["koin_lokal"] = [k for k in koin_lokal if k["symbol"] != symbol]
+        
+        # Hapus dari harga_pasar juga
+        if symbol in db.get("harga_pasar", {}):
+            del db["harga_pasar"][symbol]
+        
+        simpan_database()
+        return True
+    except Exception as e:
+        print(f"Error saat menghapus koin lokal: {e}")
+        return False
 
 
-def get_transactions():
+def ambil_transaksi():
     """Get semua transaksi"""
-    return db.get("transactions", [])
+    try:
+        return db.get("transaksi", [])
+    except Exception as e:
+        print(f"Error saat mengambil transaksi: {e}")
+        return []
 
 
-def add_transaction(transaction_data):
+def tambah_transaksi(data_transaksi):
     """Tambah transaksi baru"""
-    if "transactions" not in db:
-        db["transactions"] = []
-    db["transactions"].append(transaction_data)
-    save_database()
+    try:
+        if "transaksi" not in db:
+            db["transaksi"] = []
+        db["transaksi"].append(data_transaksi)
+        simpan_database()
+    except Exception as e:
+        print(f"Error saat menambah transaksi: {e}")
 
 
-def get_coin_by_symbol(symbol):
+def ambil_koin_by_symbol(symbol):
     """Get koin berdasarkan symbol"""
-    for coin in db.get("local_coins", []):
-        if coin["symbol"] == symbol:
-            return coin
-    return None
+    try:
+        for koin in db.get("koin_lokal", []):
+            if koin["symbol"] == symbol:
+                return koin
+        return None
+    except Exception as e:
+        print(f"Error saat mengambil koin by symbol: {e}")
+        return None
 
 
-def coin_symbol_exists(symbol):
+def symbol_koin_ada(symbol):
     """Cek apakah symbol sudah ada"""
-    for coin in db.get("local_coins", []):
-        if coin["symbol"] == symbol:
-            return True
-    return symbol in db.get("market_prices", {})
+    try:
+        for koin in db.get("koin_lokal", []):
+            if koin["symbol"] == symbol:
+                return True
+        return symbol in db.get("harga_pasar", {})
+    except Exception:
+        return False
